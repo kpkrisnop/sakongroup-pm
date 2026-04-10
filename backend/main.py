@@ -4,9 +4,11 @@ import sqlite3
 import threading
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Request, Query
+from fastapi.responses import FileResponse
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
@@ -120,11 +122,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Air Quality API is running. Use /api/pm25 for data."}
-
-
 @app.get("/api/pm25")
 @limiter.limit("60/minute")
 async def get_pm25(request: Request):
@@ -188,6 +185,20 @@ async def get_pm25_history(
             "timestamp": row["timestamp"],
         })
     return result
+
+
+# --- Static Frontend ---
+_DIST = Path(__file__).parent.parent / "frontend" / "dist"
+
+if _DIST.is_dir():
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        target = _DIST / full_path
+        if target.is_file():
+            return FileResponse(target)
+        return FileResponse(_DIST / "index.html")
+else:
+    print("INFO: frontend/dist not found — run 'npm run build' in frontend/ to enable the UI.")
 
 
 if __name__ == "__main__":

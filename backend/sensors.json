@@ -2,13 +2,13 @@
   {
     "id": "pm25_01",
     "name": "4th Floor",
-    "latitude": 17.153554,
-    "longitude": 104.142735
+    "latitude": 17.153535,
+    "longitude": 104.142851
   },
   {
     "id": "pm25_03",
     "name": "Stock 9",
-    "latitude": 17.153554,
-    "longitude": 104.142735
+    "latitude": 17.153509,
+    "longitude": 104.1426
   }
 ]
