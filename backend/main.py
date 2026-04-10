@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import sqlite3
 import threading
 import time
@@ -7,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -115,6 +116,14 @@ init_db()
 mqtt_thread = threading.Thread(target=run_mqtt, daemon=True)
 mqtt_thread.start()
 
+# --- Helpers ---
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    return R * 2 * math.asin(math.sqrt(a))
+
 # --- API ---
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Public PM2.5 API")
@@ -139,6 +148,37 @@ async def get_pm25(request: Request):
             "last_updated": data.get("last_updated"),
         })
     return result
+
+
+@app.get("/api/pm25/nearest")
+@limiter.limit("60/minute")
+async def get_nearest(
+    request: Request,
+    lat: float = Query(..., description="Latitude of querying device"),
+    lng: float = Query(..., description="Longitude of querying device"),
+):
+    """Returns the nearest sensor to the given coordinates with its latest reading."""
+    if not SENSORS:
+        raise HTTPException(status_code=404, detail="No sensors registered")
+
+    nearest = min(
+        SENSORS.values(),
+        key=lambda s: haversine_km(lat, lng, s["latitude"], s["longitude"])
+    )
+    sensor_id = nearest["id"]
+    data = latest_data.get(sensor_id, {})
+    dist = haversine_km(lat, lng, nearest["latitude"], nearest["longitude"])
+
+    return {
+        "sensor_id": sensor_id,
+        "name": nearest["name"],
+        "latitude": nearest["latitude"],
+        "longitude": nearest["longitude"],
+        "value": data.get("value"),
+        "unit": "µg/m³",
+        "last_updated": data.get("last_updated"),
+        "distance_km": round(dist, 3),
+    }
 
 
 @app.get("/api/pm25/history")
