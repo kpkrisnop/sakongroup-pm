@@ -6,9 +6,21 @@
     "longitude": 104.142851
   },
   {
+    "id": "pm25_02",
+    "name": "3rd Floor",
+    "latitude": 17.153535,
+    "longitude": 104.142746
+  },
+  {
     "id": "pm25_03",
     "name": "Stock 9",
     "latitude": 17.153509,
     "longitude": 104.1426
+  },
+  {
+    "id": "pm25_04",
+    "name": "4th Floor Air Purifier",
+    "latitude": 17.153516,
+    "longitude": 104.14287
   }
 ]

@@ -90,6 +90,7 @@ Static config file mapping each sensor's MQTT topic ID to a human-readable name 
 | Endpoint | Rate limit | Description |
 |---|---|---|
 | `GET /api/pm25` | 60/min | Latest reading for all sensors |
+| `GET /api/pm25/nearest` | 60/min | Nearest sensor to a given lat/lng |
 | `GET /api/pm25/history` | 30/min | Historical readings in time range |
 
 **History query parameters:**
@@ -109,6 +110,7 @@ Static config file mapping each sensor's MQTT topic ID to a human-readable name 
 | In-memory latest cache | Done |
 | SQLite persistence with downsampling | Done |
 | `GET /api/pm25` endpoint | Done |
+| `GET /api/pm25/nearest` endpoint | Done |
 | `GET /api/pm25/history` endpoint | Done |
 | Location enrichment per response | Done |
 | Rate limiting | Done |
@@ -117,7 +119,26 @@ Static config file mapping each sensor's MQTT topic ID to a human-readable name 
 | Proxmox deployment | Pending |
 | `cloudflared` setup | Pending |
 
-## 7. Deployment Steps
+## 7. Updating the Server
+
+```bash
+# Mac — push changes
+git add . && git commit -m "your message" && git push
+
+# Proxmox container — pull and restart
+cd /opt/pm25-api && git pull
+systemctl restart pm25-api
+```
+
+If frontend changed, also rebuild before restarting:
+```bash
+cd /opt/pm25-api/frontend && npm run build
+systemctl restart pm25-api
+```
+
+---
+
+## 8. Deployment Steps
 
 1. **HA Setup**: Configure `mqtt_statestream` and verify topics in MQTT Explorer.
 2. **Fill in coordinates**: Edit `sensors.json` with real lat/lng for each sensor location.
