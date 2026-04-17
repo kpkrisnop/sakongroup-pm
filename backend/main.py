@@ -27,6 +27,9 @@ MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 MQTT_TOPIC = os.getenv("MQTT_TOPIC_PM25", "homeassistant/sensor/+/state")
 DB_PATH = os.getenv("DB_PATH", "pm25.db")
 WRITE_INTERVAL = 60  # seconds — downsample to at most 1 write per sensor per minute
+WAQI_TOKEN = os.getenv("WAQI_TOKEN")
+WAQI_BOUNDS = "17.10,104.08,17.22,104.18"
+WAQI_POLL_INTERVAL = 900  # 15 minutes
 
 # --- Sensor Registry ---
 # sensors.json defines sensor IDs (matching the MQTT topic segment), names, and locations.
@@ -34,6 +37,12 @@ WRITE_INTERVAL = 60  # seconds — downsample to at most 1 write per sensor per 
 _sensors_path = os.path.join(os.path.dirname(__file__), "sensors.json")
 with open(_sensors_path) as f:
     SENSORS: dict[str, dict] = {s["id"]: s for s in json.load(f)}
+
+WAQI_UID_TO_ID: dict[int, str] = {
+    s["waqi_uid"]: s["id"]
+    for s in SENSORS.values()
+    if "waqi_uid" in s
+}
 
 # --- Database ---
 db_lock = threading.Lock()
@@ -111,10 +120,43 @@ def run_mqtt():
     except Exception as e:
         print(f"MQTT Connection Error: {e}")
 
+def run_waqi_poller():
+    import urllib.request
+    import urllib.parse
+    if not WAQI_TOKEN:
+        print("INFO: WAQI_TOKEN not set — WAQI poller disabled")
+        return
+    url = (
+        "https://api.waqi.info/v2/map/bounds?"
+        + urllib.parse.urlencode({"latlng": WAQI_BOUNDS, "networks": "all", "token": WAQI_TOKEN})
+    )
+    while True:
+        try:
+            with urllib.request.urlopen(url, timeout=10) as resp:
+                body = json.loads(resp.read())
+            if body.get("status") == "ok":
+                ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                now = time.monotonic()
+                for station in body["data"]:
+                    sensor_id = WAQI_UID_TO_ID.get(station["uid"])
+                    if not sensor_id or station["aqi"] in ("-", ""):
+                        continue
+                    value = float(station["aqi"])
+                    latest_data[sensor_id] = {"value": value, "last_updated": ts}
+                    if now - last_written.get(sensor_id, 0) >= WRITE_INTERVAL:
+                        write_reading(sensor_id, value, ts)
+                        last_written[sensor_id] = now
+        except Exception as e:
+            print(f"WAQI poller error: {e}")
+        time.sleep(WAQI_POLL_INTERVAL)
+
+
 # --- Startup ---
 init_db()
 mqtt_thread = threading.Thread(target=run_mqtt, daemon=True)
 mqtt_thread.start()
+waqi_thread = threading.Thread(target=run_waqi_poller, daemon=True)
+waqi_thread.start()
 
 # --- Helpers ---
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
