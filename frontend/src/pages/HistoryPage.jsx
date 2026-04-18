@@ -1,105 +1,133 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
-} from 'recharts'
-import { fetchLatest, fetchHistory } from '../api/pm25'
-import HistoryTable from '../components/HistoryTable'
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { fetchLatest, fetchHistory } from "../api/pm25";
+import HistoryTable from "../components/HistoryTable";
 
-const LINE_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4']
+const LINE_COLORS = [
+  "#6366f1",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+];
 
 function pivotRecords(records) {
-  const byTime = {}
+  const byTime = {};
   for (const r of records) {
-    if (!byTime[r.timestamp]) byTime[r.timestamp] = { timestamp: r.timestamp }
-    byTime[r.timestamp][r.sensor_id] = r.aqi
+    if (!byTime[r.timestamp]) byTime[r.timestamp] = { timestamp: r.timestamp };
+    byTime[r.timestamp][r.sensor_id] = r.aqi;
   }
-  return Object.values(byTime).sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+  return Object.values(byTime).sort((a, b) =>
+    a.timestamp.localeCompare(b.timestamp),
+  );
 }
 
 function today() {
-  return new Date().toISOString().slice(0, 10)
+  return new Date().toISOString().slice(0, 10);
 }
 
 function yesterday() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().slice(0, 10)
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
 }
 
 export default function HistoryPage() {
-  const [startDate, setStartDate] = useState(yesterday())
-  const [endDate, setEndDate]     = useState(today())
-  const [selectedSensor, setSelectedSensor] = useState('')
-  const [sensorList, setSensorList] = useState([])
-  const [records, setRecords]     = useState([])
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState(null)
+  const [startDate, setStartDate] = useState(yesterday());
+  const [endDate, setEndDate] = useState(today());
+  const [selectedSensor, setSelectedSensor] = useState("");
+  const [sensorList, setSensorList] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchLatest().then(setSensorList).catch(() => {})
-  }, [])
+    fetchLatest()
+      .then(setSensorList)
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
       const data = await fetchHistory({
         start: startDate,
-        end: endDate + 'T23:59:59Z',
+        end: endDate + "T23:59:59Z",
         sensor_id: selectedSensor || undefined,
-      })
-      setRecords(data)
+      });
+      setRecords(data);
     } catch (err) {
-      setError('Failed to load history data.')
+      setError("Failed to load history data.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const chartData   = pivotRecords(records)
-  const sensorIds   = [...new Set(records.map(r => r.sensor_id))]
-  const nameMap     = Object.fromEntries(sensorList.map(s => [s.sensor_id, s.name]))
+  const chartData = pivotRecords(records);
+  const sensorIds = [...new Set(records.map((r) => r.sensor_id))];
+  const nameMap = Object.fromEntries(
+    sensorList.map((s) => [s.sensor_id, s.name]),
+  );
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-
         {/* Controls */}
-        <form onSubmit={handleSubmit}
-              className="bg-white border border-gray-200 rounded-xl p-4 flex flex-wrap gap-4 items-end">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border border-gray-200 rounded-xl p-4 flex flex-wrap gap-4 items-end"
+        >
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Start</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Start
+            </label>
             <input
-              type="date"
+              type="datetime-local"
               value={startDate}
               max={endDate}
-              onChange={e => setStartDate(e.target.value)}
+              onChange={(e) => setStartDate(e.target.value)}
               className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">End</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              End
+            </label>
             <input
-              type="date"
+              type="datetime-local"
               value={endDate}
               min={startDate}
               max={today()}
-              onChange={e => setEndDate(e.target.value)}
+              onChange={(e) => setEndDate(e.target.value)}
               className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Sensor</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              Sensor
+            </label>
             <select
               value={selectedSensor}
-              onChange={e => setSelectedSensor(e.target.value)}
+              onChange={(e) => setSelectedSensor(e.target.value)}
               className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
               <option value="">All sensors</option>
-              {sensorList.map(s => (
-                <option key={s.sensor_id} value={s.sensor_id}>{s.name}</option>
+              {sensorList.map((s) => (
+                <option key={s.sensor_id} value={s.sensor_id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
@@ -108,7 +136,7 @@ export default function HistoryPage() {
             disabled={loading}
             className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Loading…' : 'Submit'}
+            {loading ? "Loading…" : "Submit"}
           </button>
         </form>
 
@@ -125,34 +153,37 @@ export default function HistoryPage() {
               AQI History
             </h2>
             <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={ts => new Date(ts).toLocaleDateString()}
-                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                  tickFormatter={(ts) => new Date(ts).toLocaleDateString()}
+                  tick={{ fontSize: 11, fill: "#9ca3af" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                  tick={{ fontSize: 11, fill: "#9ca3af" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <Tooltip
-                  labelFormatter={ts => new Date(ts).toLocaleString()}
+                  labelFormatter={(ts) => new Date(ts).toLocaleString()}
                   formatter={(value, name) => [
                     `${value} AQI`,
                     nameMap[name] ?? name,
                   ]}
                   contentStyle={{
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    fontSize: '12px',
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                    fontSize: "12px",
                   }}
                 />
                 <Legend
-                  formatter={name => nameMap[name] ?? name}
-                  wrapperStyle={{ fontSize: '12px' }}
+                  formatter={(name) => nameMap[name] ?? name}
+                  wrapperStyle={{ fontSize: "12px" }}
                 />
                 {sensorIds.map((id, i) => (
                   <Line
@@ -180,5 +211,5 @@ export default function HistoryPage() {
         <HistoryTable records={records} />
       </div>
     </div>
-  )
+  );
 }
