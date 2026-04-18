@@ -159,6 +159,28 @@ waqi_thread = threading.Thread(target=run_waqi_poller, daemon=True)
 waqi_thread.start()
 
 # --- Helpers ---
+_PM25_BREAKPOINTS = [
+    (0.0,   12.0,   0,   50),
+    (12.1,  35.4,   51,  100),
+    (35.5,  55.4,   101, 150),
+    (55.5,  150.4,  151, 200),
+    (150.5, 250.4,  201, 300),
+    (250.5, 350.4,  301, 400),
+    (350.5, 500.4,  401, 500),
+]
+
+def to_aqi(value: float, unit: str) -> Optional[int]:
+    if value is None:
+        return None
+    if unit == "AQI":
+        return int(value)
+    v = round(value, 1)
+    for c_lo, c_hi, i_lo, i_hi in _PM25_BREAKPOINTS:
+        if c_lo <= v <= c_hi:
+            return round((i_hi - i_lo) / (c_hi - c_lo) * (v - c_lo) + i_lo)
+    return 500
+
+
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
@@ -180,13 +202,13 @@ async def get_pm25(request: Request):
     result = []
     for sensor_id, sensor_info in SENSORS.items():
         data = latest_data.get(sensor_id, {})
+        raw = data.get("value")
         result.append({
             "sensor_id": sensor_id,
             "name": sensor_info["name"],
             "latitude": sensor_info["latitude"],
             "longitude": sensor_info["longitude"],
-            "value": data.get("value"),
-            "unit": "µg/m³",
+            "aqi": to_aqi(raw, sensor_info.get("unit", "µg/m³")),
             "last_updated": data.get("last_updated"),
         })
     return result
@@ -211,13 +233,13 @@ async def get_nearest(
     data = latest_data.get(sensor_id, {})
     dist = haversine_km(lat, lng, nearest["latitude"], nearest["longitude"])
 
+    raw = data.get("value")
     return {
         "sensor_id": sensor_id,
         "name": nearest["name"],
         "latitude": nearest["latitude"],
         "longitude": nearest["longitude"],
-        "value": data.get("value"),
-        "unit": "µg/m³",
+        "aqi": to_aqi(raw, nearest.get("unit", "µg/m³")),
         "last_updated": data.get("last_updated"),
         "distance_km": round(dist, 3),
     }
@@ -262,8 +284,7 @@ async def get_pm25_history(
             "name": info.get("name"),
             "latitude": info.get("latitude"),
             "longitude": info.get("longitude"),
-            "value": row["value"],
-            "unit": "µg/m³",
+            "aqi": to_aqi(row["value"], info.get("unit", "µg/m³")),
             "timestamp": row["timestamp"],
         })
     return result

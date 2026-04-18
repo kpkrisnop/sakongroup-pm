@@ -3,31 +3,36 @@
     "id": "pm25_01",
     "name": "4th Floor",
     "latitude": 17.153535,
-    "longitude": 104.142851
+    "longitude": 104.142851,
+    "unit": "µg/m³"
   },
   {
     "id": "pm25_02",
     "name": "3rd Floor",
     "latitude": 17.153535,
-    "longitude": 104.142746
+    "longitude": 104.142746,
+    "unit": "µg/m³"
   },
   {
     "id": "pm25_03",
     "name": "Stock 9",
     "latitude": 17.153509,
-    "longitude": 104.1426
+    "longitude": 104.1426,
+    "unit": "µg/m³"
   },
   {
     "id": "pm25_04",
     "name": "4th Floor Air Purifier",
     "latitude": 17.153516,
-    "longitude": 104.14287
+    "longitude": 104.14287,
+    "unit": "µg/m³"
   },
   {
     "id": "waqi_519202",
     "name": "ลานพระบรมราชานุสาวรีย์ ร.5",
     "latitude": 17.154086,
     "longitude": 104.138920,
+    "unit": "AQI",
     "waqi_uid": -519202
   },
   {
@@ -35,6 +40,7 @@
     "name": "สถานีอุตุนิยมวิทยาสกลนคร",
     "latitude": 17.156620,
     "longitude": 104.133216,
+    "unit": "AQI",
     "waqi_uid": 13631
   },
   {
@@ -42,6 +48,7 @@
     "name": "สี่แยกชุมชนนาอ้อย",
     "latitude": 17.131481,
     "longitude": 104.139930,
+    "unit": "AQI",
     "waqi_uid": -519304
   },
   {
@@ -49,6 +56,7 @@
     "name": "สวนสมเด็จ (สระพังทอง)",
     "latitude": 17.167083,
     "longitude": 104.157088,
+    "unit": "AQI",
     "waqi_uid": -519208
   },
   {
@@ -56,6 +64,7 @@
     "name": "ตลาดบายพาส",
     "latitude": 17.139376,
     "longitude": 104.111122,
+    "unit": "AQI",
     "waqi_uid": -519301
   },
   {
@@ -63,6 +72,7 @@
     "name": "แยกม.ราชภัฎ (ตลาดโต้รุ่ง)",
     "latitude": 17.193500,
     "longitude": 104.096086,
+    "unit": "AQI",
     "waqi_uid": -519316
   },
   {
@@ -70,6 +80,7 @@
     "name": "หน้าสำนักเทศบาลนครสกลนคร",
     "latitude": 17.157108,
     "longitude": 104.145383,
+    "unit": "AQI",
     "waqi_uid": -519298
   },
   {
@@ -77,6 +88,7 @@
     "name": "สี่แยกลานรวมใจไทสกล",
     "latitude": 17.169260,
     "longitude": 104.142810,
+    "unit": "AQI",
     "waqi_uid": -519307
   }
 ]
