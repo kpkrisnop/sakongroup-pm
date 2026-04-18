@@ -12,7 +12,7 @@ function pivotRecords(records) {
   const byTime = {}
   for (const r of records) {
     if (!byTime[r.timestamp]) byTime[r.timestamp] = { timestamp: r.timestamp }
-    byTime[r.timestamp][r.sensor_id] = r.value
+    byTime[r.timestamp][r.sensor_id] = r.aqi
   }
   return Object.values(byTime).sort((a, b) => a.timestamp.localeCompare(b.timestamp))
 }
@@ -122,7 +122,7 @@ export default function HistoryPage() {
         {chartData.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
-              PM2.5 History
+              AQI History
             </h2>
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -134,7 +134,6 @@ export default function HistoryPage() {
                   tickLine={false}
                 />
                 <YAxis
-                  unit=" µg"
                   tick={{ fontSize: 11, fill: '#9ca3af' }}
                   tickLine={false}
                   axisLine={false}
@@ -142,7 +141,7 @@ export default function HistoryPage() {
                 <Tooltip
                   labelFormatter={ts => new Date(ts).toLocaleString()}
                   formatter={(value, name) => [
-                    `${value} µg/m³`,
+                    `${value} AQI`,
                     nameMap[name] ?? name,
                   ]}
                   contentStyle={{

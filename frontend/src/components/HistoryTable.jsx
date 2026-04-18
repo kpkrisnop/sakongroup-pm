@@ -9,8 +9,7 @@ export default function HistoryTable({ records }) {
             <tr>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Sensor</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Timestamp</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Value</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Unit</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">AQI</th>
             </tr>
           </thead>
           <tbody>
@@ -20,8 +19,7 @@ export default function HistoryTable({ records }) {
                 <td className="px-4 py-2 text-gray-500">
                   {new Date(r.timestamp).toLocaleString()}
                 </td>
-                <td className="px-4 py-2 text-gray-800">{r.value}</td>
-                <td className="px-4 py-2 text-gray-400">{r.unit}</td>
+                <td className="px-4 py-2 text-gray-800">{r.aqi}</td>
               </tr>
             ))}
           </tbody>

@@ -2,23 +2,23 @@ import { useRef } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 
-function getPm25Color(value) {
-  if (value === null || value === undefined) return '#9ca3af'
-  if (value <= 12)  return '#22c55e'
-  if (value <= 35)  return '#eab308'
-  if (value <= 55)  return '#f97316'
-  if (value <= 150) return '#ef4444'
-  if (value <= 250) return '#a855f7'
+function getAqiColor(aqi) {
+  if (aqi === null || aqi === undefined) return '#9ca3af'
+  if (aqi <= 50)  return '#22c55e'
+  if (aqi <= 100) return '#eab308'
+  if (aqi <= 150) return '#f97316'
+  if (aqi <= 200) return '#ef4444'
+  if (aqi <= 300) return '#a855f7'
   return '#7f1d1d'
 }
 
-function getPm25Label(value) {
-  if (value === null || value === undefined) return 'No data'
-  if (value <= 12)  return 'Good'
-  if (value <= 35)  return 'Moderate'
-  if (value <= 55)  return 'Unhealthy for Sensitive'
-  if (value <= 150) return 'Unhealthy'
-  if (value <= 250) return 'Very Unhealthy'
+function getAqiLabel(aqi) {
+  if (aqi === null || aqi === undefined) return 'No data'
+  if (aqi <= 50)  return 'Good'
+  if (aqi <= 100) return 'Moderate'
+  if (aqi <= 150) return 'Unhealthy for Sensitive'
+  if (aqi <= 200) return 'Unhealthy'
+  if (aqi <= 300) return 'Very Unhealthy'
   return 'Hazardous'
 }
 
@@ -40,7 +40,7 @@ function createPinIcon(color) {
 
 export default function SensorMarker({ sensor }) {
   const markerRef = useRef(null)
-  const color = getPm25Color(sensor.value)
+  const color = getAqiColor(sensor.aqi)
   const icon = createPinIcon(color)
 
   const eventHandlers = {
@@ -61,13 +61,13 @@ export default function SensorMarker({ sensor }) {
             {sensor.name}
           </div>
           <div style={{ fontSize: '22px', fontWeight: 700, color, lineHeight: 1.2 }}>
-            {sensor.value ?? '—'}
+            {sensor.aqi ?? '—'}
             <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 400, marginLeft: '4px' }}>
-              {sensor.unit}
+              AQI
             </span>
           </div>
           <div style={{ fontSize: '11px', color, marginTop: '2px' }}>
-            {getPm25Label(sensor.value)}
+            {getAqiLabel(sensor.aqi)}
           </div>
           <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '6px' }}>
             {sensor.last_updated
