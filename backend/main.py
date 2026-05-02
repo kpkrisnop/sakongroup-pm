@@ -197,8 +197,26 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.get("/api/pm25")
 @limiter.limit("60/minute")
-async def get_pm25(request: Request):
-    """Returns the latest PM2.5 reading for every registered sensor, with location."""
+async def get_pm25(
+    request: Request,
+    sensor: Optional[str] = Query(None, description="Filter by sensor ID"),
+):
+    """Returns the latest reading for every registered sensor, or a single sensor if ?sensor= is given."""
+    if sensor is not None:
+        sensor_info = SENSORS.get(sensor)
+        if not sensor_info:
+            raise HTTPException(status_code=404, detail=f"Sensor '{sensor}' not found")
+        data = latest_data.get(sensor, {})
+        raw = data.get("value")
+        return {
+            "sensor_id": sensor,
+            "name": sensor_info["name"],
+            "latitude": sensor_info["latitude"],
+            "longitude": sensor_info["longitude"],
+            "aqi": to_aqi(raw, sensor_info.get("unit", "µg/m³")),
+            "last_updated": data.get("last_updated"),
+        }
+
     result = []
     for sensor_id, sensor_info in SENSORS.items():
         data = latest_data.get(sensor_id, {})
